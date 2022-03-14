@@ -1,16 +1,20 @@
 class MOMInterface:
-    def send_message(self, message):
-        '''send a message to the message queue'''
+    def __create_producer(self):
+        """create producer object"""
         pass
 
-    def receive_message(self, message_function):
-        '''receive a message from the message queue'''
+    def __create_consumer(self, topic):
+        """create consumer object"""
         pass
 
-    def on_send_success(self, record_metadata):
-        '''Track the messages that were sent successfully'''
+    def send_message(self, message, topic="client"):
+        """send a message to the message queue"""
         pass
 
-    def on_send_error(self, excp):
-        '''Track the messages that were NOT sent successfully'''
+    def receive_message(self, message_callback, topic="client"):
+        """receive a message from the message queue"""
+        pass
+
+    def wait_publishing_operations(self):
+        """ block until all publishing operations are done"""
         pass

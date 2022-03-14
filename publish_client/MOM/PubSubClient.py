@@ -38,8 +38,10 @@ class PubSubClient(MOMInterface):
         if self.publisher is None:
             self.__create_producer()
             self.__get_topic(topic)
-        publish_future = self.publisher.publish(topic_name, dumps(message).encode('utf-8'))
+        binary_message = bytes(dumps(message).encode('utf-8'))
+        publish_future = self.publisher.publish(topic_name, binary_message)
         self.publish_futures.append(publish_future)
+        return publish_future
 
     def receive_message(self, message_callback, topic="client", subscription_id="client0"):
         """receive a message from the message queue"""

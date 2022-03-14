@@ -11,11 +11,11 @@ class KafkaMOM(MOMInterface):
         self.consumer = None
         self.producer = None
 
-    def create_producer(self):
+    def __create_producer(self):
         self.producer = KafkaProducer(bootstrap_servers='localhost:9092',
                                       value_serializer=lambda x: dumps(x).encode('utf-8'))
 
-    def create_consumer(self, topic):
+    def __create_consumer(self, topic):
         self.consumer = KafkaConsumer(topic,
                                       value_deserializer=lambda m: loads(m.decode('utf-8')))
 
@@ -23,31 +23,22 @@ class KafkaMOM(MOMInterface):
         """send a message to the message queue"""
         # if the producer is not initialized, initialize it
         if self.producer is None:
-            self.create_producer()
+            self.__create_producer()
 
         # send the actual message and add callbacks on success and on failure
         self.producer.send(topic,
-                           message) \
-            .add_callback(self.on_send_success) \
-            .add_errback(self.on_send_error)
+                           message)
 
-    def on_send_success(self, record_metadata):
-        print("Message has been sent successfully topic: %s partition %s offset %s " % (
-            record_metadata.topic, record_metadata.partition, record_metadata.offset))
-
-    def on_send_error(self, excp):
-        print("this is an error in sending the message: %s" % excp)
-
-    def receive_message(self, message_function, topic="client"):
+    def receive_message(self, message_callback, topic="client"):
         """receive a message from the message queue"""
         # if there is no consumer create it
         if self.consumer is None:
-            self.create_consumer(topic)
+            self.__create_consumer(topic)
         # call client function every time you receive a message
         for message in self.consumer:
-            message_function(message)
+            message_callback(message)
 
-    def wait_current_operations(self):
+    def wait_publishing_operations(self):
         # block until all async messages are sent
         if self.producer is not None:
             self.producer.flush()
