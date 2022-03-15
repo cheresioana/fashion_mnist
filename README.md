@@ -20,3 +20,26 @@ python mlcomponent.py – mom_client [kafka/pubsub]
 4.4 Start the client component
 python client.py – mom_client [kafka/pubsub]
 
+## Code docs
+
+1. Image classifier
+
+The main code for the classification task is in mlcomponent.py. It checks if the weights of the classification model are already computed, and if so it loads the model. If mot, it trains the model and save the weights. Then it connects to the message middleware and waits for classification tasks.
+
+The DataPreprocessing class contain usefull methods for reading and parsing the data
+The CNN model contains usefull methods for working with the CNN Model
+
+2. Messaging Client
+
+MOMInterface folder provides a unified interfact for two messaging dydtems: kafka and pubsub.
+The client.py only reads some validation entries and sends them using a message broker
+
+
+## Deployment
+
+For this project I chose Docker for demonstration purposes of the deployment configuration of the microservices.
+
+
+
+
+
