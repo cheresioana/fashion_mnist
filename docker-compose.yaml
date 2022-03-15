@@ -40,3 +40,22 @@ services:
       dockerfile: Dockerfile_client
     depends_on:
       - kafka
+
+  classifier2:
+    environment:
+      -MOM: pubsub
+    build:
+      context: .
+      dockerfile: Dockerfile_classifier
+    depends_on:
+      - kafka
+
+  client2:
+    environment:
+      -MOM: pubsub
+      -PYTHONUNBUFFERED: 1
+    build:
+      context: .
+      dockerfile: Dockerfile_client
+    depends_on:
+      - kafka
