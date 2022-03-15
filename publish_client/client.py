@@ -5,7 +5,7 @@ import time
 from image_classifier.utils.load_mnist import load_mnist
 import sys
 
-from publish_client.MOM.KafkaClient import KafkaMOM
+from publish_client.MOM.KafkaClient import KafkaClient
 from publish_client.MOM.PubSubClient import PubSubClient
 
 config = {
@@ -30,7 +30,7 @@ if __name__ == '__main__':
     topic = "client"
     if args.mom_client == 'kafka':
         print("Sending messages through Kafka")
-        mom = KafkaMOM()
+        mom = KafkaClient()
     else:
         print("Sending messages through PubSub")
         mom = PubSubClient()
@@ -38,7 +38,7 @@ if __name__ == '__main__':
     for idx in range(0, 100):
         to_send_data = x_valid[idx]
         print("Send array of bytes that match the %d entry form the validation" % idx)
-        mom.send_message({'id': 0, 'img': str(bytes(to_send_data))})
+        mom.send_message({'id': idx, 'img': to_send_data.tolist()})
         time.sleep(10)
 
     # block until all async messages are sent

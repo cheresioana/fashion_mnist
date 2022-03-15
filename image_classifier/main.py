@@ -1,83 +1,69 @@
-from numpy import mean
-from numpy import std
-from matplotlib import pyplot
+import argparse
+import binascii
+import time
+from json import loads
+
 import config as cfg
-from sklearn.model_selection import KFold
-from image_classifier.CNNModel import  CNNModel
+from image_classifier.CNNModel import CNNModel
 from image_classifier.DataPreprocessing import DataPreprocessing
-from keras import Sequential
-from keras.layers import Conv2D, MaxPooling2D, Flatten, Dense
-from keras.optimizer_v1 import SGD
-import tensorflow as tf
-
-
-
-def define_model():
-    tf.compat.v1.disable_eager_execution()
-    model = Sequential()
-    model.add(Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_uniform', input_shape=(28, 28, 1)))
-    model.add(MaxPooling2D((2, 2)))
-    model.add(Flatten())
-    model.add(Dense(100, activation='relu', kernel_initializer='he_uniform'))
-    model.add(Dense(10, activation='softmax'))
-    # compile model
-    opt = SGD(lr=0.01, momentum=0.9)
-    model.compile(optimizer=opt, loss='categorical_crossentropy', metrics=['accuracy'])
-    return model
-
-# evaluate the model with 5 (or more) folds
-def evaluate_model(dataX, dataY, n_folds=5):
-    scores, histories = list(), list()
-    # prepare cross validation
-    kfold = KFold(n_folds, shuffle=True, random_state=1)
-    # enumerate splits
-    for train_ix, test_ix in kfold.split(dataX):
-        # define model
-        model = define_model()
-        # select rows for train and validation
-        trainX, trainY, validationX, validationY = dataX[train_ix], dataY[train_ix], dataX[test_ix], dataY[test_ix]
-        # fit model
-        history = model.fit(trainX, trainY, epochs=10, batch_size=32, validation_data=(validationX, validationY),
-                            verbose=0)
-        # evaluate model
-        _, acc = model.evaluate(validationX, validationY, verbose=0)
-        print('> %.3f' % (acc * 100.0))
-        # append scores
-        scores.append(acc)
-        histories.append(history)
-    return scores, histories
-
-
-# plot diagnostic learning curves
-def summarize_diagnostics(histories):
-    for i in range(len(histories)):
-        # plot loss
-        pyplot.subplot(211)
-        pyplot.title('Cross Entropy Loss')
-        pyplot.plot(histories[i].history['loss'], color='blue', label='train')
-        pyplot.plot(histories[i].history['val_loss'], color='orange', label='test')
-        # plot accuracy
-        pyplot.subplot(212)
-        pyplot.title('Classification Accuracy')
-        pyplot.plot(histories[i].history['accuracy'], color='blue', label='train')
-        pyplot.plot(histories[i].history['val_accuracy'], color='orange', label='test')
-    pyplot.show()
-
-
-def summarize_performance(scores):
-    # print summary
-    print('Accuracy: mean=%.3f std=%.3f, n=%d' % (mean(scores) * 100, std(scores) * 100, len(scores)))
-    # box and whisker plots of results
-    pyplot.boxplot(scores)
-    pyplot.show()
-
+from publish_client.MOM.PubSubClient import PubSubClient
+from publish_client.MOM.KafkaClient import KafkaClient
+import numpy as np
 
 if __name__ == '__main__':
+    model = CNNModel(cfg.data['checkpoints'])
+
+    def predict_and_respond(img):
+        prediction = model.predict(img)
+        print(
+            "Sending prediction to topic result. The image received was classified by the model as %d" % prediction[0])
+        mom.send_message({'prediction': str(prediction[0])}, topic='result')
+
+    def pubsub_callback(message):
+        print("message received")
+        print(message)
+        data_img = loads(message.data)
+        img = data_img['img']
+        predict_and_respond(img)
+        # prediction = model.predict(img)
+        # print("Sending prediction to topic result. The image received was classified by the model as %d"%prediction[0])
+        # mom.send_message({'prediction': str(prediction[0])}, topic='result')
+        message.ack()
+
+
+    def kafka_callback(message):
+        print("message received")
+        print(message)
+        image = message.value['img']
+        predict_and_respond(image)
+
+
+    parser = argparse.ArgumentParser(description='Optional app description')
+    parser.add_argument('--mom_client', type=str,
+                        help='it can either be kafka or pubsub; by default the system takes pubsub')
+    args = parser.parse_args()
+    topic = "client"
+
+    # load the data
     dataLoader = DataPreprocessing(cfg.data['training_images'], cfg.data['training_labels'], cfg.data['test_images'],
                                    cfg.data['test_labels'])
-    # dataLoader.visualize_data()
     train_x, train_y, test_x, test_y = dataLoader.process_data()
-    scores, history = evaluate_model(train_x, train_y, n_folds=2)
-    print(scores)
-    summarize_diagnostics(history)
-    summarize_performance(scores)
+
+    # try to load the model's weights. If there are no weights train the model on the existing data
+
+    if model.load_model() is None:
+        print("No model found. Proceed to train model on data")
+        scores, history = model.train_evaluate_model(train_x, train_y, n_folds=2)
+        model.summarize_diagnostics(history)
+        model.summarize_performance(scores)
+
+    # print the accuracy for the validation dataset to have an idea about the state in which you loaded the model
+    print("Current model accuracy %f" % model.evaluate_performance(test_x, test_y))
+    if args.mom_client == 'kafka':
+        print("Sending messages through Kafka")
+        mom = KafkaClient()
+        mom.receive_message(kafka_callback)
+    else:
+        print("Sending messages through PubSub")
+        mom = PubSubClient()
+        mom.receive_message(pubsub_callback)

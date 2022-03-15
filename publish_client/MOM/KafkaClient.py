@@ -6,7 +6,7 @@ from json import dumps, loads
 from publish_client.MOM.MOMInterface import MOMInterface
 
 
-class KafkaMOM(MOMInterface):
+class KafkaClient(MOMInterface):
     def __init__(self):
         self.consumer = None
         self.producer = None
@@ -28,6 +28,8 @@ class KafkaMOM(MOMInterface):
         # send the actual message and add callbacks on success and on failure
         self.producer.send(topic,
                            message)
+        self.producer.flush()
+        print('Message published successfully.')
 
     def receive_message(self, message_callback, topic="client"):
         """receive a message from the message queue"""
@@ -35,6 +37,7 @@ class KafkaMOM(MOMInterface):
         if self.consumer is None:
             self.__create_consumer(topic)
         # call client function every time you receive a message
+        print("listening for kafka message on topic %s"%topic)
         for message in self.consumer:
             message_callback(message)
 
