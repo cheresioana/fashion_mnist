@@ -1,0 +1,13 @@
+# syntax=docker/dockerfile:1
+FROM python:3.8-slim-buster
+WORKDIR /code
+#ENV WHATEVER_ENV_VARIABLE=app.py
+ENV GOOGLE_APPLICATION_CREDENTIALS='/code/gcpkey.json'
+COPY requirements.txt requirements.txt
+RUN pip install -r requirements.txt
+COPY image_classifier/utils ./image_classifier/utils
+COPY image_classifier/data ./image_classifier/data
+COPY publish_client/ ./publish_client/
+COPY client.py .
+COPY gcpkey.json ./gcpkey.json
+CMD ["python","-u", "client.py", "--mom_client", "${MOM}"]

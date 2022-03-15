@@ -9,8 +9,8 @@ from publish_client.MOM.KafkaClient import KafkaClient
 from publish_client.MOM.PubSubClient import PubSubClient
 
 config = {
-    "test_images": "data/fashion/t10k-images-idx3-ubyte.gz",
-    "test_labels": "data/fashion/t10k-labels-idx1-ubyte.gz",
+    "test_images": "image_classifier/data/fashion/t10k-images-idx3-ubyte.gz",
+    "test_labels": "image_classifier/data/fashion/t10k-labels-idx1-ubyte.gz",
 }
 
 
@@ -23,6 +23,7 @@ def on_send_error(excp):
 
 
 if __name__ == '__main__':
+    print("enters")
     parser = argparse.ArgumentParser(description='Optional app description')
     parser.add_argument('--mom_client', type=str,
                         help='it can either be kafka or pubsub; by default the system takes pubsub')

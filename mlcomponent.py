@@ -1,14 +1,10 @@
 import argparse
-import binascii
-import time
 from json import loads
-
-import config as cfg
+from image_classifier import config as cfg
 from image_classifier.CNNModel import CNNModel
 from image_classifier.DataPreprocessing import DataPreprocessing
-from publish_client.MOM.PubSubClient import PubSubClient
 from publish_client.MOM.KafkaClient import KafkaClient
-import numpy as np
+from publish_client.MOM.PubSubClient import PubSubClient
 
 if __name__ == '__main__':
     model = CNNModel(cfg.data['checkpoints'])
