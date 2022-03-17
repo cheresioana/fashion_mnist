@@ -21,10 +21,12 @@ The project also works in a combination of containers and locally runned code.
 
 4.3 Start kafka: sudo docker-compose up broker
 
-4.4 Start the ml component
+4.4 Export  GOOGLE_APPLICATION_CREDENTIALS=path
+
+4.5 Start the ml component
 python mlcomponent.py – mom_client [kafka/pubsub] --run_local True
 
-4.4 Start the client component
+4.6 Start the client component
 python client.py – mom_client [kafka/pubsub] --run_local True
 
 ## Code docs
