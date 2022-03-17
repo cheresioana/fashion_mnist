@@ -1,5 +1,5 @@
 
-from kafka import KafkaProducer
+from kafka import KafkaProducer, TopicPartition
 from kafka import KafkaConsumer
 from json import dumps, loads
 
@@ -10,13 +10,22 @@ class KafkaClient(MOMInterface):
     def __init__(self):
         self.consumer = None
         self.producer = None
+        self.ip = None
+
+    def set_ip(self, ip):
+        self.ip = ip
 
     def __create_producer(self):
-        self.producer = KafkaProducer(bootstrap_servers='localhost:9092',
+        self.producer = KafkaProducer(bootstrap_servers=[self.ip], api_version=(0, 10, 2),
                                       value_serializer=lambda x: dumps(x).encode('utf-8'))
+        print(self.producer.config)
 
     def __create_consumer(self, topic):
-        self.consumer = KafkaConsumer(topic,
+        self.consumer = KafkaConsumer(topic, bootstrap_servers=[self.ip],
+                                      auto_offset_reset='earliest',
+                                      group_id=None,
+                                      enable_auto_commit=True,
+                                      api_version=(0, 10, 2),
                                       value_deserializer=lambda m: loads(m.decode('utf-8')))
 
     def send_message(self, message, topic="client"):

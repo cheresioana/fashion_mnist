@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM python:3.8-slim-buster
+FROM python:3.8
 WORKDIR /code
 #ENV WHATEVER_ENV_VARIABLE=app.py
 ENV GOOGLE_APPLICATION_CREDENTIALS='/code/gcpkey.json'
@@ -10,4 +10,9 @@ COPY publish_client/MOM ./publish_client/MOM
 COPY publish_client/config.py ./publish_client/config.py
 COPY mlcomponent.py .
 COPY gcpkey.json ./gcpkey.json
-CMD ["python", "-u", "mlcomponent.py", "--mom_client", "${MOM}"]
+ARG MOM
+RUN echo "$MOM"
+ENV ENV_MOM $MOM
+RUN echo "${ENV_MOM}"
+RUN pip install confluent_kafka
+CMD ["sh" ,"-c","python -u mlcomponent.py --mom_client ${ENV_MOM} --run_local False"]
