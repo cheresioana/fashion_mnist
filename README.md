@@ -14,9 +14,12 @@
 4. For running the code separately
 
 4.1 Make sure the points 1 and 2 are respected
+
 4.2 run pip install -r requirements.txt
+
 4.3 Start the ml component
 python mlcomponent.py – mom_client [kafka/pubsub]
+
 4.4 Start the client component
 python client.py – mom_client [kafka/pubsub]
 
