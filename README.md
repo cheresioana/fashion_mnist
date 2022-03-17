@@ -9,19 +9,23 @@
 
 2. Run the app:
 	docker-compose up
-3. For adding more component just add them in Docker-compose.yaml , changing only the environment variable to “kafka” of “pubsub”, depending on which message broker you prefere.
+3. For adding more component just add them in Docker-compose.yaml , changing only the ergument variable to “kafka” of “pubsub”, depending on which message broker you prefere.
 
-4. For running the code separately
+4. For running the code locally
+The project also works in a combination of containers and locally runned code.
+
 
 4.1 Make sure the points 1 and 2 are respected
 
-4.2 run pip install -r requirements.txt
+4.2 Create a virtual env and run pip install -r requirements.txt
 
-4.3 Start the ml component
-python mlcomponent.py – mom_client [kafka/pubsub]
+4.3 Start kafka: sudo docker-compose up broker
+
+4.4 Start the ml component
+python mlcomponent.py – mom_client [kafka/pubsub] --run_local True
 
 4.4 Start the client component
-python client.py – mom_client [kafka/pubsub]
+python client.py – mom_client [kafka/pubsub] --run_local True
 
 ## Code docs
 
